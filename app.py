@@ -270,11 +270,10 @@ with col_right:
         fig = draw_maze(current_maze, all_results["A* (Manhattan)"]["explored"], all_results["A* (Manhattan)"]["path"], "رسم توضيحي لخوارزمية A* (النموذج الأقوى للحل)")
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
     else:
-        clean_name = algo_choice.split(" (")[0] if " (" in algo_choice else algo_choice
-        res = all_results[clean_name]
-        fig = draw_maze(current_maze, res["explored"], res["path"], f"مسار استكشاف وحل خوارزمية: {algo_choice}")
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
-
+    # نأخذ الاسم المختار من القائمة بالظبط بدون أي تعديل لتفادي الـ KeyError
+    res = all_results[algo_choice]
+    fig = draw_maze(current_maze, res["explored"], res["path"], f"مسار استكشاف وحل خوارزمية: {algo_choice}")
+    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 # ==========================================
 # الجزء السفلي: نتائج المقارنة والتحليل الذكي الشامل
 # ==========================================
