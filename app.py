@@ -236,6 +236,7 @@ algo_map = {
     5: ("A* (Euclidean)", lambda m: a_star(m, euclidean_distance))
 }
 
+#  هذا الجزء الجديد اللي حيخلي الألوان تتغير فوراً بين الخوارزميات:
 for tab_id, tab_obj in enumerate(tabs):
     with tab_obj:
         algo_title, algo_func = algo_map[tab_id]
@@ -243,7 +244,10 @@ for tab_id, tab_obj in enumerate(tabs):
         # قياس الأداء بدقة عالية جداً لعرضها للدكتور
         tracemalloc.start()
         start_time = time.perf_counter()
-        sol_path, total_explored = algo_func(current_maze)
+        
+        # تشغيل الخوارزمية الخاصة بالتاب الحالي وتخزين نتائجها في متغيرات فريدة
+        current_path, current_explored = algo_func(current_maze)
+        
         end_time = time.perf_counter()
         _, peak_mem = tracemalloc.get_traced_memory()
         tracemalloc.stop()
@@ -253,14 +257,14 @@ for tab_id, tab_obj in enumerate(tabs):
         
         # عرض الكروت الإحصائية الملفتة للانتباه
         m1, m2, m3, m4 = st.columns(4)
-        m1.metric("📏 طول مسار الحل", f"{len(sol_path)} خطوة" if sol_path else "لا يوجد حل")
-        m2.metric("🔍 العقد المستكشفة", f"{len(total_explored)} عقدة")
+        m1.metric("📏 طول مسار الحل", f"{len(current_path)} خطوة" if current_path else "لا يوجد حل")
+        m2.metric("🔍 العقد المستكشفة", f"{len(current_explored)} عقدة")
         m3.metric("⚡ زمن التنفيذ", f"{exec_time:.3f} مللي ثانية")
         m4.metric("💾 استهلاك الذاكرة", f"{mem_kb:.2f} KB")
         
-        # التعديل الجديد لحل مشكلة التكرار
-fig = draw_maze(current_maze, total_explored, sol_path)
-st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"plotly_{tab_id}")
+        # رسم المتاهة بالبيانات الخاصة بالخوارزمية الحالية لمنع الثبات
+        fig = draw_maze(current_maze, current_explored, current_path)
+        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"plotly_{tab_id}")
 
 st.markdown("---")
 st.markdown("<div style='background-color: #1e293b; padding: 15px; border-radius: 10px; border-right: 5px solid #38bdf8; text-align: right;'>"
