@@ -16,8 +16,6 @@ st.markdown("""
     <style>
     .main { background-color: #0f172a; }
     h1 { color: #38bdf8; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; }
-    .stTabs [data-baseweb="tab"] { font-size: 16px; font-weight: bold; color: #94a3b8; }
-    .stTabs [aria-selected="true"] { color: #38bdf8 !important; border-bottom-color: #38bdf8 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -174,14 +172,23 @@ def a_star(maze, heuristic_func):
     return None, explored
 
 # ==========================================
-# دالة الرسم بالثيم المظلم النيوني الفاخر
+# دالة الرسم (تم إصلاحها بالكامل لتحديث الألوان بشكل صحيح)
 # ==========================================
 def draw_maze(maze, explored, path=None):
+    # إنشاء مصفوفة جديدة نظيفة في كل مرة لمنع تداخل الرسومات القديمة
     display_grid = np.copy(maze.grid).astype(float)
+    
+    # تلوين الخلايا المستكشفة (أزرق)
     if explored:
-        for r, c in explored: display_grid[r, c] = 0.4
+        for r, c in explored: 
+            display_grid[r, c] = 0.4
+            
+    # تلوين مسار الحل الفعلي (برتقالي ذهبي)
     if path:
-        for r, c in path: display_grid[r, c] = 0.7
+        for r, c in path: 
+            display_grid[r, c] = 0.7
+            
+    # تحديد نقطة البداية والنهاية بدقة وثبات
     display_grid[maze.start[0], maze.start[1]] = 0.2
     display_grid[maze.end[0], maze.end[1]] = 0.9
 
@@ -206,7 +213,7 @@ def draw_maze(maze, explored, path=None):
     return fig
 
 # ==========================================
-# بناء واجهة التحكم الرئيسية والتبديل السريع
+# بناء واجهة التحكم الرئيسية والتبديل السريع المضمون
 # ==========================================
 c_set1, c_set2 = st.columns([1, 1])
 with c_set1:
@@ -217,54 +224,60 @@ with c_set2:
     st.write("<br>", unsafe_allow_html=True)
     generate_btn = st.button("🔄 توليد متاهة عشوائية جديدة بالكامل", use_container_width=True)
 
-# ميزة الـ Cache لمنع البطء والتعطيل
+# إدارة حالة المتاهة في الذاكرة
 if "maze" not in st.session_state or generate_btn or st.session_state.get("last_size") != grid_size:
     st.session_state.maze = Maze(grid_size, grid_size)
     st.session_state.last_size = grid_size
 
 current_maze = st.session_state.maze
 
+st.markdown("---")
 st.markdown("### 🗺️ اختر خوارزمية البحث للمقارنة الفورية:")
-tabs = st.tabs(["BFS", "DFS", "Greedy (Manhattan)", "Greedy (Euclidean)", "A* (Manhattan)", "A* (Euclidean)"])
 
-algo_map = {
-    0: ("BFS (Breadth-First Search)", lambda m: bfs(m)),
-    1: ("DFS (Depth-First Search)", lambda m: dfs(m)),
-    2: ("Greedy (Manhattan)", lambda m: greedy_bfs(m, manhattan_distance)),
-    3: ("Greedy (Euclidean)", lambda m: greedy_bfs(m, euclidean_distance)),
-    4: ("A* (Manhattan)", lambda m: a_star(m, manhattan_distance)),
-    5: ("A* (Euclidean)", lambda m: a_star(m, euclidean_distance))
+# استخدام Selectbox لمنع مشاكل الكاش والثبات في الرسم البياني
+algo_choice = st.selectbox("اضغطي هنا لاختيار الخوارزمية ورؤية فرق الألوان والمسار الفعلي:", [
+    "BFS (Breadth-First Search)",
+    "DFS (Depth-First Search)",
+    "Greedy (Manhattan)",
+    "Greedy (Euclidean)",
+    "A* (Manhattan)",
+    "A* (Euclidean)"
+])
+
+algo_map_final = {
+    "BFS (Breadth-First Search)": lambda m: bfs(m),
+    "DFS (Depth-First Search)": lambda m: dfs(m),
+    "Greedy (Manhattan)": lambda m: greedy_bfs(m, manhattan_distance),
+    "Greedy (Euclidean)": lambda m: greedy_bfs(m, euclidean_distance),
+    "A* (Manhattan)": lambda m: a_star(m, manhattan_distance),
+    "A* (Euclidean)": lambda m: a_star(m, euclidean_distance)
 }
 
-#  هذا الجزء الجديد اللي حيخلي الألوان تتغير فوراً بين الخوارزميات:
-for tab_id, tab_obj in enumerate(tabs):
-    with tab_obj:
-        algo_title, algo_func = algo_map[tab_id]
-        
-        # قياس الأداء بدقة عالية جداً لعرضها للدكتور
-        tracemalloc.start()
-        start_time = time.perf_counter()
-        
-        # تشغيل الخوارزمية الخاصة بالتاب الحالي وتخزين نتائجها في متغيرات فريدة
-        current_path, current_explored = algo_func(current_maze)
-        
-        end_time = time.perf_counter()
-        _, peak_mem = tracemalloc.get_traced_memory()
-        tracemalloc.stop()
-        
-        exec_time = (end_time - start_time) * 1000
-        mem_kb = peak_mem / 1024
-        
-        # عرض الكروت الإحصائية الملفتة للانتباه
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("📏 طول مسار الحل", f"{len(current_path)} خطوة" if current_path else "لا يوجد حل")
-        m2.metric("🔍 العقد المستكشفة", f"{len(current_explored)} عقدة")
-        m3.metric("⚡ زمن التنفيذ", f"{exec_time:.3f} مللي ثانية")
-        m4.metric("💾 استهلاك الذاكرة", f"{mem_kb:.2f} KB")
-        
-        # رسم المتاهة بالبيانات الخاصة بالخوارزمية الحالية لمنع الثبات
-        fig = draw_maze(current_maze, current_explored, current_path)
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"plotly_{tab_id}")
+# تشغيل الخوارزمية المختارة
+algo_func = algo_map_final[algo_choice]
+
+tracemalloc.start()
+start_time = time.perf_counter()
+
+current_path, current_explored = algo_func(current_maze)
+
+end_time = time.perf_counter()
+_, peak_mem = tracemalloc.get_traced_memory()
+tracemalloc.stop()
+
+exec_time = (end_time - start_time) * 1000
+mem_kb = peak_mem / 1024
+
+# عرض الكروت الإحصائية الذكية اللي تتغير مع كل خوارزمية
+m1, m2, m3, m4 = st.columns(4)
+m1.metric("📏 طول مسار الحل", f"{len(current_path)} خطوة" if current_path else "لا يوجد حل")
+m2.metric("🔍 العقد المستكشفة", f"{len(current_explored)} عقدة")
+m3.metric("⚡ زمن التنفيذ", f"{exec_time:.3f} مللي ثانية")
+m4.metric("💾 استهلاك الذاكرة", f"{mem_kb:.2f} KB")
+
+# رسم المتاهة بالبيانات الفريدة للخوارزمية الحالية
+fig = draw_maze(current_maze, current_explored, current_path)
+st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
 
 st.markdown("---")
 st.markdown("<div style='background-color: #1e293b; padding: 15px; border-radius: 10px; border-right: 5px solid #38bdf8; text-align: right;'>"
