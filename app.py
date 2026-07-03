@@ -19,7 +19,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🧠 جيل المستقبل: محاكي حل المتاهات الذكي")
+st.title("احلا تحية ل نجلاء الطويل ")
 st.markdown("<h4 style='text-align: center; color: #cbd5e1;'>مشروع مادة الذكاء الاصطناعي</h4>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center; color: #94a3b8; font-size: 15px;'>إعداد الطالبات: هبة محمود ابوسريويل & فاطمة خليفة | تحت إشراف: د. صلاح النعاس</p>", unsafe_allow_html=True)
 st.markdown("---")
