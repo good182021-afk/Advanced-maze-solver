@@ -258,9 +258,9 @@ for tab_id, tab_obj in enumerate(tabs):
         m3.metric("⚡ زمن التنفيذ", f"{exec_time:.3f} مللي ثانية")
         m4.metric("💾 استهلاك الذاكرة", f"{mem_kb:.2f} KB")
         
-        # رسم المتاهة الفاخرة
-        fig = draw_maze(current_maze, total_explored, sol_path)
-        st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        # التعديل الجديد لحل مشكلة التكرار
+fig = draw_maze(current_maze, total_explored, sol_path)
+st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False}, key=f"plotly_{tab_id}")
 
 st.markdown("---")
 st.markdown("<div style='background-color: #1e293b; padding: 15px; border-radius: 10px; border-right: 5px solid #38bdf8; text-align: right;'>"
