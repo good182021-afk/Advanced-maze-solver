@@ -11,7 +11,7 @@ import plotly.graph_objects as go
 # إعدادات الصفحة التفاعلية
 st.set_page_config(page_title="Advanced Maze Solver AI", layout="wide")
 st.title(" 🧠 Advanced Maze Solver Using AI Search Algorithms")
-st.markdown("### مشروع مادة الذكاء الاصطناعي - إعداد: هبة محمود & فاطمة خليفة | تحت إشراف: د. صلاح")
+st.markdown("###  مشروع مادة الذكاء الاصطناعي - إعداد:  هبة محمود ابوسريويل & فاطمة خليفة | تحت إشراف: د.  صلاح النعاس")
 
 # ==========================================
 # 1. كلاس توليد المتاهة
