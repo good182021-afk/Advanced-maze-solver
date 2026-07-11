@@ -234,10 +234,12 @@ with col_left:
 
     st.markdown("---")
     st.markdown("### 🔍 خيارات العرض والبحث")
+    
+    # 🛠️ التعديل الأول: تم توحيد الأسماء هنا لتطابق القاموس تماماً لتفادي الـ KeyError
     algo_choice = st.selectbox("اختر الخوارزمية للعرض الفوري:", [
         "🔄 مقارنة جميع الخوارزميات معاً",
-        "BFS (Breadth-First Search)",
-        "DFS (Depth-First Search)",
+        "BFS",
+        "DFS",
         "Greedy (Manhattan)",
         "Greedy (Euclidean)",
         "A* (Manhattan)",
@@ -270,9 +272,11 @@ with col_right:
         fig = draw_maze(current_maze, all_results["A* (Manhattan)"]["explored"], all_results["A* (Manhattan)"]["path"], "رسم توضيحي لخوارزمية A* (النموذج الأقوى للحل)")
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
     else:
+        # 🛠️ التعديل الثاني: القراءة المباشرة من algo_choice بعد تنظيف وتوحيد الأسماء والمسافات
         res = all_results[algo_choice]
         fig = draw_maze(current_maze, res["explored"], res["path"], f"مسار استكشاف وحل خوارزمية: {algo_choice}")
         st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+        
 # ==========================================
 # الجزء السفلي: نتائج المقارنة والتحليل الذكي الشامل
 # ==========================================
