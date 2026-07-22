@@ -233,7 +233,6 @@ def ida_star(maze, heuristic_func):
 def draw_maze(maze, explored, path=None):
     display_grid = np.copy(maze.grid).astype(float)
     
-    # تحويل القيم إلى درجات رقمية محددة
     for r in range(maze.rows):
         for c in range(maze.cols):
             val = display_grid[r, c]
@@ -247,27 +246,26 @@ def draw_maze(maze, explored, path=None):
     if explored:
         for r, c in explored:
             if (r, c) != maze.start and (r, c) != maze.end:
-                display_grid[r, c] = 0.65 # نطاق الاستكشاف
+                display_grid[r, c] = 0.65
             
     if path:
         for r, c in path:
             if (r, c) != maze.start and (r, c) != maze.end:
-                display_grid[r, c] = 0.85 # مسار الحل الفعلي
+                display_grid[r, c] = 0.85
             
-    display_grid[maze.start[0], maze.start[1]] = 0.15 # البداية
-    display_grid[maze.end[0], maze.end[1]] = 1.0     # النهاية
+    display_grid[maze.start[0], maze.start[1]] = 0.15
+    display_grid[maze.end[0], maze.end[1]] = 1.0
 
-    # رسم الخريطة بألوان صافية ومتباينة بدون أي أيقونات مشوشة
     fig = go.Figure(data=go.Heatmap(
         z=display_grid,
         colorscale=[
-            [0.0, '#F8FAFC'],    # ممر عادي (أبيض نقاء)
+            [0.0, '#F8FAFC'],    # ممر عادي (أبيض)
             [0.15, '#22C55E'],   # نقطة البداية (أخضر)
-            [0.3, '#FACC15'],    # رمل (أصفر صحراوي ناعم)
-            [0.5, '#78350F'],    # طين (بني داكن)
-            [0.65, '#93C5FD'],   # خلايا مفحوصة (أزرق فاتح)
-            [0.85, '#F97316'],   # مسار الحل الأمثل (برتقالي نيون بارز)
-            [1.0, '#1E293B']     # الجدران (رمادي كحلي داكن)
+            [0.3, '#FACC15'],    # رمل (أصفر)
+            [0.5, '#78350F'],    # طين (بني)
+            [0.65, '#93C5FD'],   # خلايا مفحوصة (أزرق)
+            [0.85, '#F97316'],   # مسار الحل (برتقالي)
+            [1.0, '#1E293B']     # الجدران (رمادي داكن)
         ],
         showscale=False,
         xgap=1.5, ygap=1.5
@@ -318,28 +316,13 @@ with c4:
     st.write("")
     generate_btn = st.button("🔄 توليد جديد", use_container_width=True)
 
-# أداة التعديل اليدوي
-with st.expander("🛠️ 🌟 بناء وتعديل الخلايا يدوياً (Interactive Builder)"):
-    ec1, ec2, ec3, ec4 = st.columns(4)
-    with ec1: edit_r = st.number_input("سطر الخلية (Row):", min_value=0, max_value=grid_size-1, value=1)
-    with ec2: edit_c = st.number_input("عمود الخلية (Column):", min_value=0, max_value=grid_size-1, value=1)
-    with ec3: cell_type = st.selectbox("نوع الخلية:", ["ممر عادي (0)", "جدار (1)", "رمل - تكلفة 3 (3)", "طين - تكلفة 5 (5)"])
-    with ec4: 
-        st.write("")
-        apply_edit = st.button("تطبيق التعديل")
-
-# إدارة حالة الذاكرة
+# إدارة حالة المتاهة
 if "maze" not in st.session_state or generate_btn or st.session_state.get("last_size") != grid_size or st.session_state.get("last_terrain") != enable_terrain:
     st.session_state.maze = Maze(grid_size, grid_size, add_terrain=enable_terrain)
     st.session_state.last_size = grid_size
     st.session_state.last_terrain = enable_terrain
 
 current_maze = st.session_state.maze
-
-if 'apply_edit' in locals() and apply_edit:
-    val_map = {"ممر عادي (0)": 0, "جدار (1)": 1, "رمل - تكلفة 3 (3)": 3, "طين - تكلفة 5 (5)": 5}
-    current_maze.grid[edit_r][edit_c] = val_map[cell_type]
-    st.success(f"تم تعديل الخلية ({edit_r}, {edit_c}) بنجاح!")
 
 # تنفيذ الخوارزمية
 tracemalloc.start()
@@ -380,7 +363,7 @@ with mid_col2:
     fig = draw_maze(current_maze, total_explored, sol_path)
     st.plotly_chart(fig, use_container_width=True)
 
-    # دليل الألوان التوضيحي البسيط أسفل المتاهة مباشرة
+    # دليل الألوان التوضيحي البسيط أسفل المتاهة
     st.markdown("""
     <div style='display: flex; justify-content: center; gap: 15px; background-color: #1e293b; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: white;'>
         <div><span style='color:#F8FAFC;'>⬜</span> ممر عادي (1)</div>
@@ -404,9 +387,37 @@ m3.metric("العقد المستكشفة (Nodes)", len(total_explored))
 m4.metric("زمن التنفيذ (Time)", f"{exec_time:.2f} ms")
 m5.metric("استهلاك الذاكرة (Memory)", f"{mem_kb:.2f} KB")
 
+# ==========================================
+# 🌟 4️⃣ مربع التقرير الذكي والتوصية (Smart Analysis Box)
+# ==========================================
+st.markdown("<br>", unsafe_allow_html=True)
+
+if enable_terrain:
+    best_algo = "A* (Manhattan Distance)"
+    reason = f"بما أن التضاريس (الرمل والطين) مفعّلة، فإن <b>خوارزمية A*</b> هي الأفضل والأكثر كفاءة على الإطلاق؛ لأنها تحسب التكلفة الفعليه $g(n)$ إلى جانب المسافة المتبقية $h(n)$، فتتجنب الممرات الطينية ذات التكلفة العالية (5) والرملية (3)، بعكس الخوارزميات العادية (مثل BFS) التي تختار المسار القصير هندسياً حتى لو كان مكلفاً طاقوياً."
+    box_color = "#1e3a8a" # أزرق داكن احترافي
+    border_color = "#3b82f6"
+else:
+    best_algo = "A* (Manhattan) أو BFS"
+    reason = f"في البيئات المستوية (بدون تضاريس)، تضمن <b>خوارزمية BFS</b> الوصول لأقصر عدد خطوات دائماً، بينما تتيح <b>خوارزمية A*</b> الوصول لنفس المسار المثالي بذكاء أعلى وعدد عقد مستكشفة أقل بكثير ({len(total_explored)} عقدة في هذه الحالة)."
+    box_color = "#064e3b" # أخضر زمردي داكن
+    border_color = "#10b981"
+
+st.markdown(f"""
+<div style='background-color: {box_color}; border-right: 5px solid {border_color}; padding: 15px; border-radius: 8px; color: #f8fafc;'>
+    <h4 style='margin-0; color: #ffffff;'>📝 تقرير التوصية والتحليل الأكاديمي (Smart AI Recommendation):</h4>
+    <p style='margin-top: 8px; font-size: 1rem;'>
+        <b>الخوارزمية الأفضل لهذه الحالة:</b> <span style='color: #fde047; font-size: 1.1rem;'>{best_algo}</span>
+    </p>
+    <p style='margin-bottom: 0; font-size: 0.95rem; line-height: 1.6; color: #cbd5e1;'>
+        <b>السبب العلمي:</b> {reason}
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 st.markdown("<br><br>", unsafe_allow_html=True)
 
-# 4️⃣ التوقيع الأكاديمي الأسفل على اليسار
+# 5️⃣ التوقيع الأكاديمي الأسفل على اليسار
 footer_col1, footer_col2 = st.columns([3, 1])
 with footer_col2:
     st.markdown("""
