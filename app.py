@@ -7,19 +7,17 @@ import math
 from collections import deque
 import heapq
 import plotly.graph_objects as go
-import pandas as pd
 
 # 1. إعدادات الصفحة التفاعلية (Full Width)
-st.set_page_config(page_title="Advanced Maze Solver AI Pro", layout="wide")
+st.set_page_config(page_title="Advanced AI Maze Solver", layout="wide")
 
 # ==========================================
-# 1. كلاس توليد المتاهة مع دعم التضاريس الموزونة (Weighted Terrain)
+# 1. كلاس توليد المتاهة والتضاريس الموزونة
 # ==========================================
 class Maze:
     def __init__(self, rows, cols, add_terrain=False):
         self.rows = rows
         self.cols = cols
-        # القيم: 0: ممر عادي (تكلفة 1)، 1: جدار، 3: رمل (تكلفة 3)، 5: طين (تكلفة 5)
         self.grid = np.ones((rows, cols), dtype=int)
         self.start = (0, 0)
         self.end = (rows - 1, cols - 1)
@@ -61,7 +59,6 @@ class Maze:
         self.grid[self.end[0]][self.end[1]-1] = 0
 
     def _add_weighted_terrain(self):
-        """إضافة تضاريس واقعية: رمل بتكلفة 3 وطين بتكلفة 5"""
         for r in range(self.rows):
             for c in range(self.cols):
                 if self.grid[r][c] == 0 and (r, c) != self.start and (r, c) != self.end:
@@ -75,8 +72,8 @@ class Maze:
         r, c = pos
         val = self.grid[r][c]
         if val == 1:
-            return float('inf') # جدار
-        return val if val > 0 else 1 # الممر العادي تكلفته 1
+            return float('inf')
+        return val if val > 0 else 1
 
     def get_valid_neighbors(self, pos):
         r, c = pos
@@ -108,7 +105,7 @@ def reconstruct_path(came_from, start, end):
     return path
 
 # ==========================================
-# 3. الخوارزميات البرمجية (BFS, DFS, Greedy, A*, IDA*)
+# 3. الخوارزميات (BFS, DFS, Greedy, A*, IDA*)
 # ==========================================
 def bfs(maze):
     start, end = maze.start, maze.end
@@ -231,12 +228,12 @@ def ida_star(maze, heuristic_func):
     return None, explored
 
 # ==========================================
-# 4. دالة الرسم الاحترافي للمتاهة بالتصميم الواقعي للرمل والطين
+# 4. دالة الرسم المبسطة والأنيقة للمتاهة
 # ==========================================
 def draw_maze(maze, explored, path=None):
     display_grid = np.copy(maze.grid).astype(float)
     
-    # تحويل القيم إلى تمثيل ألوان واقعية
+    # تحويل القيم إلى درجات رقمية محددة
     for r in range(maze.rows):
         for c in range(maze.cols):
             val = display_grid[r, c]
@@ -250,69 +247,50 @@ def draw_maze(maze, explored, path=None):
     if explored:
         for r, c in explored:
             if (r, c) != maze.start and (r, c) != maze.end:
-                display_grid[r, c] = 0.65 # أزرق شفاف لمساحة البحث
+                display_grid[r, c] = 0.65 # نطاق الاستكشاف
             
     if path:
         for r, c in path:
             if (r, c) != maze.start and (r, c) != maze.end:
-                display_grid[r, c] = 0.85 # برتقالي مشع لمسار الحل
+                display_grid[r, c] = 0.85 # مسار الحل الفعلي
             
-    display_grid[maze.start[0], maze.start[1]] = 0.15 # بداية
-    display_grid[maze.end[0], maze.end[1]] = 1.0     # نهاية
+    display_grid[maze.start[0], maze.start[1]] = 0.15 # البداية
+    display_grid[maze.end[0], maze.end[1]] = 1.0     # النهاية
 
+    # رسم الخريطة بألوان صافية ومتباينة بدون أي أيقونات مشوشة
     fig = go.Figure(data=go.Heatmap(
         z=display_grid,
         colorscale=[
-            [0.0, '#E2E8F0'],    # ممر عادي (أسفلت/طريق رمادي فاتح)
-            [0.15, '#22C55E'],   # نقطة البداية (أخضر نيون)
-            [0.3, '#FACC15'],    # 🏜️ رمل صحراوي (أصفر ذهبي)
-            [0.5, '#78350F'],    # 🪵 طين ووحل (بني داكن واقعي)
-            [0.65, '#3B82F6'],   # مساحة البحث واكتشاف الخوارزمية (أزرق)
-            [0.85, '#F97316'],   # مسار الحل الأمثل (برتقالي مشع)
-            [1.0, '#0F172A']     # الجدران والصخور (رمادي غامق/أسود)
+            [0.0, '#F8FAFC'],    # ممر عادي (أبيض نقاء)
+            [0.15, '#22C55E'],   # نقطة البداية (أخضر)
+            [0.3, '#FACC15'],    # رمل (أصفر صحراوي ناعم)
+            [0.5, '#78350F'],    # طين (بني داكن)
+            [0.65, '#93C5FD'],   # خلايا مفحوصة (أزرق فاتح)
+            [0.85, '#F97316'],   # مسار الحل الأمثل (برتقالي نيون بارز)
+            [1.0, '#1E293B']     # الجدران (رمادي كحلي داكن)
         ],
         showscale=False,
         xgap=1.5, ygap=1.5
     ))
 
-    # إضافة رموز وأيقونات واقعية فوق الخلايا (في الأحجام الصغرى والمتوسطة)
-    if maze.rows <= 31:
-        annotations = []
-        for r in range(maze.rows):
-            for c in range(maze.cols):
-                cell_val = maze.grid[r][c]
-                pos = (r, c)
-                
-                if pos == maze.start:
-                    annotations.append(dict(x=c, y=r, text="🚀", showarrow=False, font=dict(size=14)))
-                elif pos == maze.end:
-                    annotations.append(dict(x=c, y=r, text="🏁", showarrow=False, font=dict(size=14)))
-                elif cell_val == 3 and (not path or pos not in path):
-                    annotations.append(dict(x=c, y=r, text="🏜️", showarrow=False, font=dict(size=10)))
-                elif cell_val == 5 and (not path or pos not in path):
-                    annotations.append(dict(x=c, y=r, text="🪵", showarrow=False, font=dict(size=10)))
-
-        fig.update_layout(annotations=annotations)
-
     fig.update_layout(
         yaxis=dict(autorange="reversed", showgrid=False, zeroline=False, showticklabels=False),
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        margin=dict(l=10, r=10, t=10, b=10),
-        height=620,
+        margin=dict(l=5, r=5, t=5, b=5),
+        height=580,
         paper_bgcolor='#0f172a', plot_bgcolor='#0f172a'
     )
     return fig
 
 # ==========================================
-# 5. واجهة المستخدم والتنسيق الهيكلي المطلوب
+# 5. الواجهة والتنسيق الرئيسي
 # ==========================================
 
-# 1️⃣ العنوان العلوي الرئيسي
 st.markdown("<h1 style='text-align: center;'>🧠 Advanced AI Maze Solver Pro</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #94a3b8;'>نظام حل المتاهات الذكي والمقارنة بين خوارزميات البحث الملاحة</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #94a3b8;'>نظام ملاحة حل المتاهات الذكي مع محاكاة التضاريس وخوارزميات البحث</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 2️⃣ إعدادات المحاكاة في أعلى الصفحة
+# 1️⃣ إعدادات المحاكاة في أعلى الصفحة
 st.subheader("⚙️ إعدادات المحاكاة وتوليد المتاهة")
 c1, c2, c3, c4 = st.columns([1.5, 2, 1.5, 1])
 
@@ -333,15 +311,15 @@ with c2:
     ])
 
 with c3:
-    enable_terrain = st.checkbox("🏜️ تفعيل التضاريس الواقعية (رمل/طين)", value=False)
-    animate = st.checkbox("🔮 محاكاة الاستكشاف (أنيميشن)", value=False)
+    enable_terrain = st.checkbox("🏜️ تفعيل التضاريس (رمل/طين)", value=False)
+    animate = st.checkbox("🔮 أنيميشن الاستكشاف خطوة بخطوة", value=False)
 
 with c4:
     st.write("")
     generate_btn = st.button("🔄 توليد جديد", use_container_width=True)
 
-# أداة بناء وتعديل المتاهة يدوياً
-with st.expander("🛠️ 🌟 بناء وتعديل المتاهة يدوياً (Interactive Builder)"):
+# أداة التعديل اليدوي
+with st.expander("🛠️ 🌟 بناء وتعديل الخلايا يدوياً (Interactive Builder)"):
     ec1, ec2, ec3, ec4 = st.columns(4)
     with ec1: edit_r = st.number_input("سطر الخلية (Row):", min_value=0, max_value=grid_size-1, value=1)
     with ec2: edit_c = st.number_input("عمود الخلية (Column):", min_value=0, max_value=grid_size-1, value=1)
@@ -350,7 +328,7 @@ with st.expander("🛠️ 🌟 بناء وتعديل المتاهة يدوياً
         st.write("")
         apply_edit = st.button("تطبيق التعديل")
 
-# إدارة حالة المتاهة
+# إدارة حالة الذاكرة
 if "maze" not in st.session_state or generate_btn or st.session_state.get("last_size") != grid_size or st.session_state.get("last_terrain") != enable_terrain:
     st.session_state.maze = Maze(grid_size, grid_size, add_terrain=enable_terrain)
     st.session_state.last_size = grid_size
@@ -363,7 +341,7 @@ if 'apply_edit' in locals() and apply_edit:
     current_maze.grid[edit_r][edit_c] = val_map[cell_type]
     st.success(f"تم تعديل الخلية ({edit_r}, {edit_c}) بنجاح!")
 
-# حساب وتنفيذ الخوارزمية المحددة
+# تنفيذ الخوارزمية
 tracemalloc.start()
 start_time = time.perf_counter()
 
@@ -381,12 +359,11 @@ tracemalloc.stop()
 
 exec_time = (end_time - start_time) * 1000
 mem_kb = peak_mem / 1024
-
 total_path_cost = sum(current_maze.get_cost(node) for node in sol_path) if sol_path else 0
 
 st.markdown("---")
 
-# 3️⃣ الرسم في منتصف الصفحة تماماً
+# 2️⃣ الرسم في منتصف الصفحة
 st.markdown("<h3 style='text-align: center;'>🗺️ العرض المرئي للمتاهة ورسم المسار</h3>", unsafe_allow_html=True)
 
 mid_col1, mid_col2, mid_col3 = st.columns([1, 4, 1])
@@ -403,9 +380,21 @@ with mid_col2:
     fig = draw_maze(current_maze, total_explored, sol_path)
     st.plotly_chart(fig, use_container_width=True)
 
+    # دليل الألوان التوضيحي البسيط أسفل المتاهة مباشرة
+    st.markdown("""
+    <div style='display: flex; justify-content: center; gap: 15px; background-color: #1e293b; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: white;'>
+        <div><span style='color:#F8FAFC;'>⬜</span> ممر عادي (1)</div>
+        <div><span style='color:#FACC15;'>🟨</span> رمل (3)</div>
+        <div><span style='color:#78350F;'>🤎</span> طين (5)</div>
+        <div><span style='color:#1E293B;'>⬛</span> جدار</div>
+        <div><span style='color:#93C5FD;'>🟦</span> عقد مفحوصة</div>
+        <div><span style='color:#F97316;'>🟧</span> مسار الحل</div>
+    </div>
+    """, unsafe_allow_html=True)
+
 st.markdown("---")
 
-# 4️⃣ قسم التحليل والنتائج أسفل الرسم في نهاية الصفحة
+# 3️⃣ قسم التحليل والنتائج الإحصائية
 st.subheader("📈 لوحة قياس الأداء والتحليل الإحصائي (Performance Metrics)")
 
 m1, m2, m3, m4, m5 = st.columns(5)
@@ -415,11 +404,9 @@ m3.metric("العقد المستكشفة (Nodes)", len(total_explored))
 m4.metric("زمن التنفيذ (Time)", f"{exec_time:.2f} ms")
 m5.metric("استهلاك الذاكرة (Memory)", f"{mem_kb:.2f} KB")
 
-st.caption("💡 دليل التضاريس الواقعية: الطريق الرمادي = ممر عادي (1) | 🏜️ الأصفر = رمل (3) | 🪵 البني = طين (5) | ⬛ الداكن = جدار | 🚀/🏁 الأخضر = البداية والنهاية | 🟦 الأزرق = نطاق البحث | 🟧 البرتقالي = المسار الأفضل.")
+st.markdown("<br><br>", unsafe_allow_html=True)
 
-st.markdown("<br><br><br>", unsafe_allow_html=True)
-
-# 5️⃣ التوقيع الأكاديمي أسفل الصفحة على اليسار
+# 4️⃣ التوقيع الأكاديمي الأسفل على اليسار
 footer_col1, footer_col2 = st.columns([3, 1])
 with footer_col2:
     st.markdown("""
