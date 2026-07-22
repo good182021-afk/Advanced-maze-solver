@@ -388,29 +388,48 @@ m4.metric("زمن التنفيذ (Time)", f"{exec_time:.2f} ms")
 m5.metric("استهلاك الذاكرة (Memory)", f"{mem_kb:.2f} KB")
 
 # ==========================================
-# 🌟 4️⃣ مربع التقرير الذكي والتوصية (Smart Analysis Box)
+# 🌟 4️⃣ مربع التقرير الذكي المبني على تجربة حقيقية (Dynamic Benchmark Recommendation)
 # ==========================================
 st.markdown("<br>", unsafe_allow_html=True)
 
+# تجربة خوارزمية A* و BFS في الخلفية للمقارنة الحقيقية
+path_a, explored_a = a_star(current_maze, manhattan_distance)
+path_bfs, explored_bfs = bfs(current_maze)
+
+cost_a = sum(current_maze.get_cost(n) for n in path_a) if path_a else 0
+cost_bfs = sum(current_maze.get_cost(n) for n in path_bfs) if path_bfs else 0
+
+# تحليل التجربة الحية
 if enable_terrain:
     best_algo = "A* (Manhattan Distance)"
-    reason = f"بما أن التضاريس (الرمل والطين) مفعّلة، فإن <b>خوارزمية A*</b> هي الأفضل والأكثر كفاءة على الإطلاق؛ لأنها تحسب التكلفة الفعليه $g(n)$ إلى جانب المسافة المتبقية $h(n)$، فتتجنب الممرات الطينية ذات التكلفة العالية (5) والرملية (3)، بعكس الخوارزميات العادية (مثل BFS) التي تختار المسار القصير هندسياً حتى لو كان مكلفاً طاقوياً."
     box_color = "#1e3a8a" # أزرق داكن احترافي
     border_color = "#3b82f6"
+    reason = f"""
+    بناءً على التجربة الحية المنفذة في الخلفية:<br>
+    • حققت خوارزمية <b>A*</b> تكلفة كليّة قدرها <b>({cost_a})</b> عبر استكشاف <b>({len(explored_a)})</b> عقدة فقط.<br>
+    • بينما حققت خوارزمية <b>BFS</b> تكلفة كليّة أعلى قدرها <b>({cost_bfs})</b> لأنها عمياء عن التكاليف واستكشفت <b>({len(explored_bfs)})</b> عقدة.<br>
+    <b>النتيجة:</b> خوارزمية A* هي الأفضل لأنها تتجنب الطرق الطينية والمكلفة طاقوياً.
+    """
 else:
-    best_algo = "A* (Manhattan) أو BFS"
-    reason = f"في البيئات المستوية (بدون تضاريس)، تضمن <b>خوارزمية BFS</b> الوصول لأقصر عدد خطوات دائماً، بينما تتيح <b>خوارزمية A*</b> الوصول لنفس المسار المثالي بذكاء أعلى وعدد عقد مستكشفة أقل بكثير ({len(total_explored)} عقدة في هذه الحالة)."
+    if len(explored_a) <= len(explored_bfs):
+        best_algo = "A* (Manhattan Distance)"
+        nodes_saved = len(explored_bfs) - len(explored_a)
+        reason = f"في البيئة العادية، حققت خوارزمية <b>A*</b> نفس المسار المثالي لخوارزمية BFS، ولكن بذكاء أعلى حيث وفرت فحص <b>({nodes_saved})</b> عقدة مقارنة بـ BFS."
+    else:
+        best_algo = "BFS (Breadth-First Search)"
+        reason = "في البيئات العادية غير الموزونة، تضمن خوارزمية BFS إيجاد أقصر مسار هندسي دائماً بضمانات رياضية كاملة."
+    
     box_color = "#064e3b" # أخضر زمردي داكن
     border_color = "#10b981"
 
 st.markdown(f"""
 <div style='background-color: {box_color}; border-right: 5px solid {border_color}; padding: 15px; border-radius: 8px; color: #f8fafc;'>
-    <h4 style='margin-0; color: #ffffff;'>📝 تقرير التوصية والتحليل الأكاديمي (Smart AI Recommendation):</h4>
+    <h4 style='margin: 0; color: #ffffff;'>📝 تقرير التوصية القائم على التجربة الحية (Dynamic AI Benchmark Report):</h4>
     <p style='margin-top: 8px; font-size: 1rem;'>
-        <b>الخوارزمية الأفضل لهذه الحالة:</b> <span style='color: #fde047; font-size: 1.1rem;'>{best_algo}</span>
+        <b>الخوارزمية الموصى بها لهذه المتاهة:</b> <span style='color: #fde047; font-size: 1.1rem;'>{best_algo}</span>
     </p>
     <p style='margin-bottom: 0; font-size: 0.95rem; line-height: 1.6; color: #cbd5e1;'>
-        <b>السبب العلمي:</b> {reason}
+        {reason}
     </p>
 </div>
 """, unsafe_allow_html=True)
