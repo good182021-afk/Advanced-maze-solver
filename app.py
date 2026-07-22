@@ -353,15 +353,17 @@ mid_col1, mid_col2, mid_col3 = st.columns([1, 4, 1])
 
 with mid_col2:
     if animate and len(total_explored) > 0:
-        step = 1  # يرسم خلية بخلية بدون قفزات
+        step = max(1, len(total_explored) // 20)  # تقسم الخطوات ليعرض أنيميشن سلس وموزون
         plot_placeholder = st.empty()
         for i in range(0, len(total_explored), step):
-            fig = draw_maze(current_maze, total_explored[:i])
-            plot_placeholder.plotly_chart(fig, use_container_width=True)
+            fig_anim = draw_maze(current_maze, total_explored[:i])
+            # إضافة key=f"anim_{i}" لمنع خطأ الـ Duplicate Element ID
+            plot_placeholder.plotly_chart(fig_anim, use_container_width=True, key=f"anim_{i}")
             time.sleep(0.05)
             
-    fig = draw_maze(current_maze, total_explored, sol_path)
-    st.plotly_chart(fig, use_container_width=True)
+    # الرسمة النهائية بعد اكتمال الحل
+    fig_final = draw_maze(current_maze, total_explored, sol_path)
+    st.plotly_chart(fig_final, use_container_width=True, key="final_maze_plot")
 
     # دليل الألوان التوضيحي البسيط أسفل المتاهة
     st.markdown("""
